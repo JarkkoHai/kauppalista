@@ -53,13 +53,13 @@ import {
 
 // --- Firebase Configuration ---
 const firebaseConfig = {
-  apiKey: "AIzaSyBFy0EYeIIBR_ihN7H2U1Y5erLtim0mYBs",
-  authDomain: "kauppalista-haikarainen.firebaseapp.com",
-  projectId: "kauppalista-haikarainen",
-  storageBucket: "kauppalista-haikarainen.firebasestorage.app",
-  messagingSenderId: "643359117533",
-  appId: "1:643359117533:web:4af019eb39adf30c3c4b34",
-  measurementId: "G-HT1YMHW3HR"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
