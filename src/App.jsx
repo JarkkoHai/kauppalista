@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
   signInAnonymously, 
   onAuthStateChanged,
   createUserWithEmailAndPassword,
@@ -12,7 +10,6 @@ import {
   browserSessionPersistence
 } from 'firebase/auth';
 import { 
-  getFirestore, 
   collection, 
   addDoc, 
   onSnapshot, 
@@ -22,6 +19,7 @@ import {
   serverTimestamp,
   writeBatch
 } from 'firebase/firestore';
+import { auth, db, COLLECTION_PATH, APP_ID } from './config/firebase';
 import { 
   ShoppingCart, 
   Plus, 
@@ -50,38 +48,8 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import { CATEGORIES, RECIPES } from './data/constants';
 
-// --- Firebase Configuration ---
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const COLLECTION_PATH = "shared_shopping_lists";
-const APP_ID = "kauppalista-pro-v1";
-
-// --- Mock Data ---
-const CATEGORIES = [
-  { id: 'hevi', name: 'HeVi', icon: <Apple className="w-4 h-4" />, items: ['Omena', 'Banaani', 'Kurkku', 'Tomaatti', 'Porkkana', 'Sipuli'] },
-  { id: 'maito', name: 'Maitotuotteet', icon: <Milk className="w-4 h-4" />, items: ['Maito', 'Kaurajuoma', 'Juusto', 'Voi', 'Jogurtti', 'Rahka'] },
-  { id: 'liha', name: 'Liha & Proteiini', icon: <Beef className="w-4 h-4" />, items: ['Jauheliha', 'Kanafilee', 'Lohi', 'Kananmuna', 'Nakki'] },
-];
-
-const RECIPES = [
-  { id: 'r1', name: 'Bolognese', items: ['Jauheliha', 'Tomaattimurska', 'Spagetti', 'Sipuli', 'Valkosipuli'] },
-  { id: 'r2', name: 'Kanakeitto', items: ['Kana', 'Keittojuurekset', 'Peruna', 'Kanaliemikuutio'] },
-  { id: 'r3', name: 'Lohipasta', items: ['Lohi', 'Kerma', 'Pasta', 'Sitruuna', 'Tilli'] },
-];
-
-// --- Components ---
 
 const LoginScreen = ({ onJoin, onProLogin }) => {
   const [roomCode, setRoomCode] = useState('');
@@ -380,7 +348,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
               {CATEGORIES.map(cat => (
                 <div key={cat.id} className="mb-4">
                   <div className="flex items-center gap-2 mb-2 text-slate-400">
-                    {cat.icon}
+                    <cat.icon className="w-4 h-4" />
                     <span className="text-[10px] font-bold uppercase">{cat.name}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
