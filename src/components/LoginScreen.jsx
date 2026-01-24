@@ -1,3 +1,4 @@
+import { generateRoomCode } from '../utils/helpers';
 import React, { useState } from 'react';
 import { 
   setPersistence,
@@ -71,18 +72,34 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
           <div className="space-y-4">
             <div className="space-y-3">
               <input
-                type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-                placeholder="SYÖTÄ RYHMÄKOODI"
-                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 outline-none font-black text-center text-lg tracking-widest transition-all placeholder:text-slate-300 uppercase"
-              />
-              <button 
-                onClick={() => roomCode && onJoin(roomCode.trim().toUpperCase())}
-                className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 active:scale-95 transition-all"
-              >
-                ALOITA KÄYTTÖ
-              </button>
+  type="text"
+  value={roomCode}
+  onChange={(e) => setRoomCode(e.target.value)}
+  placeholder="SYÖTÄ KOODI TAI JÄTÄ TYHJÄKSI"
+  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-emerald-500 outline-none font-black text-center text-lg tracking-widest transition-all placeholder:text-slate-300 uppercase"
+/>
+<p className="text-xs text-slate-400 font-bold">
+  Jätä tyhjäksi luodaksesi uuden listan tai syötä koodi liittyäksesi olemassa olevaan.
+</p>
+<button 
+  onClick={() => {
+    console.log('🔵 Button clicked!');
+    console.log('🔵 roomCode value:', roomCode);
+    
+    if (roomCode) {
+      console.log('🟢 Joining existing room:', roomCode);
+      onJoin(roomCode.trim().toUpperCase());
+    } else {
+      console.log('🟡 Creating new room...');
+      const newCode = generateRoomCode();
+      console.log('🟡 Generated code:', newCode);
+      onJoin(newCode);
+    }
+  }}
+  className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 active:scale-95 transition-all"
+>
+  ALOITA KÄYTTÖ
+</button>
             </div>
 
             <div className="pt-4 border-t border-slate-100 mt-4">

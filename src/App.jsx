@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { createList, joinList } from './utils/listService';
+import { generateRoomCode } from './utils/helpers';
 import { 
   signInAnonymously, 
   onAuthStateChanged,
@@ -40,6 +42,7 @@ import ShareModal from './components/ShareModal';
 import Sidebar from './components/Sidebar';
 
 const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
+  //console.log('🟣 ShoppingListApp rendered with:', { roomCode, isPro, userId: user?.uid });
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,67 +52,76 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const q = collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH);
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const filtered = allDocs
-        .filter(item => item.roomCode === roomCode)
-        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      setItems(filtered);
-      setLoading(false);
-    }, (err) => console.error(err));
+  console.log('🔵 Setting up items listener for listId:', roomCode);
+  
+  const q = collection(db, 'list_items');
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const filtered = allDocs
+      .filter(item => item.listId === roomCode)
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    
+    console.log('🔵 Items loaded:', filtered.length);
+    setItems(filtered);
+    setLoading(false);
+  }, (err) => {
+    console.error('🔴 Error loading items:', err);
+  });
 
-    return () => unsubscribe();
-  }, [roomCode]);
+  return () => {
+    console.log('🔵 Cleaning up listener');
+    unsubscribe();
+  };
+}, [roomCode]); // ← TÄRKEÄÄ: vain roomCode dependency
 
   const addItem = async (text, recipeName = null) => {
-    if (!text.trim()) return;
-    try {
-      await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH), {
-        text: text.trim(),
-        completed: false,
-        roomCode,
-        createdAt: serverTimestamp(),
-        userId: user.uid,
-        recipeName: recipeName
-      });
-    } catch (err) { console.error(err); }
-  };
+  if (!text.trim()) return;
+  try {
+    await addDoc(collection(db, 'list_items'), {
+      text: text.trim(),
+      completed: false,
+      listId: roomCode, // Yhdistä listaan
+      createdAt: serverTimestamp(),
+      userId: user.uid,
+      recipeName: recipeName
+    });
+  } catch (err) { console.error(err); }
+};
 
   const toggleItem = async (id, status) => {
-    await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH, id), { 
-      completed: !status 
-    });
-  };
+  await updateDoc(doc(db, 'list_items', id), { 
+    completed: !status 
+  });
+};
 
-  const deleteItem = async (id) => {
-    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH, id));
-  };
+ const deleteItem = async (id) => {
+  await deleteDoc(doc(db, 'list_items', id));
+};
 
   const clearList = async () => {
-    const batch = writeBatch(db);
-    items.forEach(item => {
-      batch.delete(doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH, item.id));
-    });
-    await batch.commit();
-  };
+  const batch = writeBatch(db);
+  items.forEach(item => {
+    batch.delete(doc(db, 'list_items', item.id));
+  });
+  await batch.commit();
+};
 
   const addRecipe = async (recipe) => {
-    const batch = writeBatch(db);
-    recipe.items.forEach(item => {
-      const newDocRef = doc(collection(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_PATH));
-      batch.set(newDocRef, {
-        text: item,
-        completed: false,
-        roomCode,
-        createdAt: serverTimestamp(),
-        userId: user.uid,
-        recipeName: recipe.name
-      });
+  const batch = writeBatch(db);
+  recipe.items.forEach(item => {
+    const newDocRef = doc(collection(db, 'list_items'));
+    batch.set(newDocRef, {
+      text: item,
+      completed: false,
+      listId: roomCode,
+      createdAt: serverTimestamp(),
+      userId: user.uid,
+      recipeName: recipe.name
     });
-    await batch.commit();
-    setSidebarOpen(false);
-  };
+  });
+  await batch.commit();
+  setSidebarOpen(false);
+};
 
   const handleCopyCode = () => {
     const el = document.createElement('textarea');
@@ -346,16 +358,35 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleJoin = (code, isPro = false) => {
-    const newSession = { code, isPro };
+ const handleJoin = async (code, isPro = false) => {
+  console.log('🔴 handleJoin called with code:', code, 'isPro:', isPro);
+  
+  // Varmista että käyttäjä on kirjautunut
+  let currentUser = auth.currentUser;
+  console.log('🔴 Current user:', currentUser?.uid);
+  
+  if (!currentUser) {
+    console.log('🔴 No user, signing in anonymously...');
+    const userCredential = await signInAnonymously(auth);
+    currentUser = userCredential.user;
+    console.log('🔴 Signed in as:', currentUser.uid);
+  }
+  
+  // Liity tai luo lista
+  console.log('🔴 Calling joinList with:', code, currentUser.uid);
+  const result = await joinList(code, currentUser.uid);
+  console.log('🔴 joinList result:', result);
+  
+  if (result.success) {
+    const newSession = { code: result.code, isPro };
     setSession(newSession);
     localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
-    
-    // Jos kirjaudutaan anonyymisti koodilla
-    if (!auth.currentUser) {
-       signInAnonymously(auth);
-    }
-  };
+    console.log('🟢 Session created successfully!');
+  } else {
+    console.error('🔴 Failed to join/create list:', result.error);
+    alert('Virhe listan luomisessa/liittymisessä');
+  }
+};
 
   const handleLogout = async () => {
     setSession(null);
@@ -375,9 +406,12 @@ export default function App() {
 
   if (!session) {
     return <LoginScreen 
-      onJoin={(code) => handleJoin(code, false)} 
-      onProLogin={(u) => handleJoin('TIIMI-PRO', true)} 
-    />;
+  onJoin={(code) => handleJoin(code, false)} 
+  onProLogin={(u) => {
+    const newCode = generateRoomCode();
+    handleJoin(newCode, true);
+  }} 
+/>;
   }
 
   return (
