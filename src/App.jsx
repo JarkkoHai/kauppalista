@@ -52,7 +52,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-  console.log('🔵 Setting up items listener for listId:', roomCode);
+  //console.log('🔵 Setting up items listener for listId:', roomCode);
   
   const q = collection(db, 'list_items');
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -61,15 +61,15 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
       .filter(item => item.listId === roomCode)
       .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     
-    console.log('🔵 Items loaded:', filtered.length);
+    //console.log('🔵 Items loaded:', filtered.length);
     setItems(filtered);
     setLoading(false);
   }, (err) => {
-    console.error('🔴 Error loading items:', err);
+    //console.error('🔴 Error loading items:', err);
   });
 
   return () => {
-    console.log('🔵 Cleaning up listener');
+    //console.log('🔵 Cleaning up listener');
     unsubscribe();
   };
 }, [roomCode]); // ← TÄRKEÄÄ: vain roomCode dependency
@@ -359,23 +359,23 @@ export default function App() {
   }, []);
 
  const handleJoin = async (code, isPro = false) => {
-  console.log('🔴 handleJoin called with code:', code, 'isPro:', isPro);
+  //console.log('🔴 handleJoin called with code:', code, 'isPro:', isPro);
   
   // Varmista että käyttäjä on kirjautunut
   let currentUser = auth.currentUser;
-  console.log('🔴 Current user:', currentUser?.uid);
+  //console.log('🔴 Current user:', currentUser?.uid);
   
   if (!currentUser) {
-    console.log('🔴 No user, signing in anonymously...');
+    //console.log('🔴 No user, signing in anonymously...');
     const userCredential = await signInAnonymously(auth);
     currentUser = userCredential.user;
-    console.log('🔴 Signed in as:', currentUser.uid);
+    //console.log('🔴 Signed in as:', currentUser.uid);
   }
   
   // Liity tai luo lista
-  console.log('🔴 Calling joinList with:', code, currentUser.uid);
+  //console.log('🔴 Calling joinList with:', code, currentUser.uid);
   const result = await joinList(code, currentUser.uid);
-  console.log('🔴 joinList result:', result);
+  //console.log('🔴 joinList result:', result);
   
   if (result.success) {
     const newSession = { code: result.code, isPro };

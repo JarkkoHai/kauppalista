@@ -34,19 +34,21 @@ export const joinList = async (code, userId) => {
   const listRef = doc(db, 'lists', code);
   
   try {
-    const listSnap = await getDoc(listRef);
-    
-    if (!listSnap.exists()) {
-      // Lista ei ole olemassa, luo se
+    // Yritä ensin luoda lista (jos ei ole olemassa)
+    // Jos on jo olemassa, createList epäonnistuu ja yritetään liittyä
+    try {
       return await createList(code, userId);
+    } catch (createError) {
+      // Lista on jo olemassa, yritä liittyä
+      if (createError.code === 'permission-denied') {
+        // Yritä päivittää jäsenyys
+        await updateDoc(listRef, {
+          members: arrayUnion(userId)
+        });
+        return { success: true, code };
+      }
+      throw createError;
     }
-    
-    // Lisää käyttäjä jäseneksi
-    await updateDoc(listRef, {
-      members: arrayUnion(userId)
-    });
-    
-    return { success: true, code };
   } catch (error) {
     console.error('Error joining list:', error);
     return { success: false, error };
