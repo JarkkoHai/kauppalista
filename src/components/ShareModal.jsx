@@ -1,4 +1,5 @@
 import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   Share2, 
   Copy, 
@@ -7,6 +8,8 @@ import {
 } from 'lucide-react';
 
 const ShareModal = ({ roomCode, copied, onClose, onCopyCode, onWhatsAppShare }) => {
+  const shareUrl = `${window.location.origin}/join/${roomCode}`;
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-6">
       <div className="bg-white rounded-[2.5rem] w-full max-w-sm p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
@@ -14,12 +17,30 @@ const ShareModal = ({ roomCode, copied, onClose, onCopyCode, onWhatsAppShare }) 
           <Share2 className="w-8 h-8 text-emerald-600" />
         </div>
         <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">Kutsu tiimiisi</h2>
-        <p className="text-slate-500 text-sm mb-8 font-medium italic">Muut voivat liittyä tällä koodilla:</p>
+        <p className="text-slate-500 text-sm mb-8 font-medium italic">Muut voivat liittyä skanaamalla:</p>
         
-        <div className="bg-slate-50 rounded-2xl p-6 border-2 border-slate-100 mb-8 relative group">
-          <p className="text-4xl font-black tracking-widest text-emerald-600 uppercase select-all">{roomCode}</p>
+        {/* TÄHÄN tulee QR-koodi ja linkit koodi */}
+        <div className="space-y-4 mb-6">
+          {/* QR-koodi */}
+          <div className="bg-white p-4 rounded-2xl border-2 border-slate-100 flex justify-center">
+            <QRCodeSVG 
+              value={shareUrl} 
+              size={200}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+          
+          {/* Linkki ja koodi */}
+          <div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-100">
+            <p className="text-xs font-bold text-slate-500 mb-2 uppercase">Kutsu linkillä:</p>
+            <p className="text-xs font-mono text-emerald-600 break-all select-all bg-white p-2 rounded-lg border border-slate-200">{shareUrl}</p>
+            <p className="text-xs text-slate-400 mt-3 mb-1">tai koodilla:</p>
+            <p className="text-2xl font-black tracking-widest text-slate-700 uppercase text-center">{roomCode}</p>
+          </div>
         </div>
 
+        {/* Napit jatkuvat täällä */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <button 
             onClick={onCopyCode}

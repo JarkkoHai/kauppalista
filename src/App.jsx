@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { createList, joinList } from './utils/listService';
 import { generateRoomCode } from './utils/helpers';
 import { 
@@ -42,6 +43,8 @@ import ShareModal from './components/ShareModal';
 import Sidebar from './components/Sidebar';
 
 const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
+  console.log('👤 Current user ID:', user?.uid);
+  console.log('🏠 Room code:', roomCode);
   //console.log('🟣 ShoppingListApp rendered with:', { roomCode, isPro, userId: user?.uid });
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
@@ -124,20 +127,22 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
 };
 
   const handleCopyCode = () => {
-    const el = document.createElement('textarea');
-    el.value = roomCode;
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand('copy');
-    document.body.removeChild(el);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const shareUrl = `${window.location.origin}/join/${roomCode}`;
+  const el = document.createElement('textarea');
+  el.value = shareUrl;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  setCopied(true);
+  setTimeout(() => setCopied(false), 2000);
+};
 
   const handleWhatsAppShare = () => {
-    const message = encodeURIComponent(`Heippa! Tule mukaan muokkaamaan kauppalistaa Kauppalista Prossa koodilla: *${roomCode}* 🛒✨`);
-    window.open(`https://wa.me/?text=${message}`, '_blank');
-  };
+  const shareUrl = `${window.location.origin}/join/${roomCode}`;
+  const message = encodeURIComponent(`Heippa! Tule mukaan muokkaamaan kauppalistaa! 🛒✨\n\n${shareUrl}`);
+  window.open(`https://wa.me/?text=${message}`, '_blank');
+};
 
   const activeItems = items.filter(i => !i.completed);
   const completedItems = items.filter(i => i.completed);
@@ -334,8 +339,78 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
     </div>
   );
 };
+const JoinPage = () => {
+  const { code } = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const joinListFromUrl = async () => {
+      console.log('🔵 JoinPage: code =', code);
+      
+      if (!code) {
+        console.log('🔴 No code, redirecting to home');
+        navigate('/');
+        return;
+      }
+      
+      try {
+        // Kirjaudu jos ei ole vielä kirjautunut
+        let currentUser = auth.currentUser;
+        console.log('🔵 Current user:', currentUser?.uid);
+        
+        if (!currentUser) {
+          console.log('🔵 No user, signing in anonymously...');
+          const userCredential = await signInAnonymously(auth);
+          currentUser = userCredential.user;
+          console.log('🔵 Signed in as:', currentUser.uid);
+        }
+        
+        // Liity listaan (lisää jäseneksi)
+        console.log('🔵 Calling joinList with:', code.toUpperCase(), currentUser.uid);
+        const result = await joinList(code.toUpperCase(), currentUser.uid);
+        console.log('🔵 joinList result:', result);
+        
+        if (result.success) {
+          const newSession = { code: result.code, isPro: false };
+          localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
+          console.log('🟢 Session saved, navigating to home');
+          navigate('/');
+        } else {
+          console.error('🔴 joinList failed:', result.error);
+          alert('Virhe listan liittymisessä: ' + (result.error?.message || 'Tuntematon virhe'));
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('🔴 Exception in joinListFromUrl:', error);
+        alert('Virhe: ' + error.message);
+        navigate('/');
+      }
+    };
+    
+    joinListFromUrl();
+  }, [code, navigate]);
+  
+  return (
+    <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="ml-4 font-bold text-slate-600">Liitytään listaan...</p>
+    </div>
+  );
+};
 
 export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/join/:code" element={<JoinPage />} />
+        <Route path="/" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+// Siirrä vanha App-logiikka MainApp-komponenttiin
+function MainApp() {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('shopping_session_pro_v2');
@@ -343,11 +418,8 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Tarkistetaan onko käyttäjä jo kirjautunut (Firebase Auth hoitaa pysyvyyden)
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       if (!u) {
-        // Jos ei sessiota, ei pakoteta anonyymiä heti, jotta LoginScreen näkyy puhtaana
-        // Mutta jos session koodi on jo olemassa (LocalStorage), kirjaudutaan anonyymisti
         if (localStorage.getItem('shopping_session_pro_v2')) {
           signInAnonymously(auth).catch(e => console.error(e));
         }
@@ -359,31 +431,21 @@ export default function App() {
   }, []);
 
  const handleJoin = async (code, isPro = false) => {
-  //console.log('🔴 handleJoin called with code:', code, 'isPro:', isPro);
-  
-  // Varmista että käyttäjä on kirjautunut
   let currentUser = auth.currentUser;
-  //console.log('🔴 Current user:', currentUser?.uid);
   
   if (!currentUser) {
-    //console.log('🔴 No user, signing in anonymously...');
     const userCredential = await signInAnonymously(auth);
     currentUser = userCredential.user;
-    //console.log('🔴 Signed in as:', currentUser.uid);
   }
   
-  // Liity tai luo lista
-  //console.log('🔴 Calling joinList with:', code, currentUser.uid);
-  const result = await joinList(code, currentUser.uid);
-  //console.log('🔴 joinList result:', result);
+  const result = await joinList(code, currentUser.uid);  // ✅ Kutsutaan joinList
   
   if (result.success) {
     const newSession = { code: result.code, isPro };
     setSession(newSession);
     localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
-    console.log('🟢 Session created successfully!');
   } else {
-    console.error('🔴 Failed to join/create list:', result.error);
+    console.error('Failed to join/create list:', result.error);
     alert('Virhe listan luomisessa/liittymisessä');
   }
 };
@@ -395,7 +457,6 @@ export default function App() {
     setUser(null);
   };
 
-  // Ladataan tilaa
   if (session && !user) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-50">
@@ -406,12 +467,12 @@ export default function App() {
 
   if (!session) {
     return <LoginScreen 
-  onJoin={(code) => handleJoin(code, false)} 
-  onProLogin={(u) => {
-    const newCode = generateRoomCode();
-    handleJoin(newCode, true);
-  }} 
-/>;
+      onJoin={(code) => handleJoin(code, false)} 
+      onProLogin={(u) => {
+        const newCode = generateRoomCode();
+        handleJoin(newCode, true);
+      }} 
+    />;
   }
 
   return (
