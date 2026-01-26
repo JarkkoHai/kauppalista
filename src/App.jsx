@@ -466,14 +466,18 @@ function MainApp() {
   }
 
   if (!session) {
-    return <LoginScreen 
-      onJoin={(code) => handleJoin(code, false)} 
-      onProLogin={(u) => {
-        const newCode = generateRoomCode();
-        handleJoin(newCode, true);
-      }} 
-    />;
-  }
+  return <LoginScreen 
+    onJoin={(code) => handleJoin(code, false)} 
+    onProLogin={(u) => {
+      // Poista vanha sessio ensin
+      localStorage.removeItem('shopping_session_pro_v2');
+      
+      // Luo uusi Pro-lista
+      const newCode = generateRoomCode();
+      handleJoin(newCode, true);
+    }} 
+  />;
+}
 
   return (
     <ShoppingListApp 
