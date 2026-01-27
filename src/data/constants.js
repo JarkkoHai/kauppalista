@@ -3,38 +3,38 @@ import { Apple, Milk, Beef } from 'lucide-react';
 export const CATEGORIES = [
   { 
     id: 'hevi', 
-    name: 'HeVi', 
-    icon: Apple,  // ← Pelkkä komponentti, ei JSX!
-    items: ['Omena', 'Banaani', 'Kurkku', 'Tomaatti', 'Porkkana', 'Sipuli'] 
+    nameKey: 'sidebar.categories.hevi',
+    icon: Apple,
+    itemKeys: ['omena', 'banaani', 'kurkku', 'tomaatti', 'porkkana', 'sipuli']
   },
   { 
     id: 'maito', 
-    name: 'Maitotuotteet', 
+    nameKey: 'sidebar.categories.dairy',
     icon: Milk, 
-    items: ['Maito', 'Kaurajuoma', 'Juusto', 'Voi', 'Jogurtti', 'Rahka'] 
+    itemKeys: ['maito', 'kaurajuoma', 'juusto', 'voi', 'jogurtti', 'rahka']
   },
   { 
     id: 'liha', 
-    name: 'Liha & Proteiini', 
+    nameKey: 'sidebar.categories.meat',
     icon: Beef, 
-    items: ['Jauheliha', 'Kanafilee', 'Lohi', 'Kananmuna', 'Nakki'] 
+    itemKeys: ['jauheliha', 'kanafilee', 'lohi', 'kananmuna', 'nakki']
   },
 ];
 
 export const RECIPES = [
   { 
     id: 'r1', 
-    name: 'Bolognese', 
-    items: ['Jauheliha', 'Tomaattimurska', 'Spagetti', 'Sipuli', 'Valkosipuli'] 
+    nameKey: 'sidebar.recipeNames.bolognese',
+    itemKeys: ['jauheliha', 'tomaattimurska', 'spagetti', 'sipuli', 'valkosipuli']
   },
   { 
     id: 'r2', 
-    name: 'Kanakeitto', 
-    items: ['Kana', 'Keittojuurekset', 'Peruna', 'Kanaliemikuutio'] 
+    nameKey: 'sidebar.recipeNames.kanakeitto',
+    itemKeys: ['kana', 'keittojuurekset', 'peruna', 'kanaliemikuutio']
   },
   { 
     id: 'r3', 
-    name: 'Lohipasta', 
-    items: ['Lohi', 'Kerma', 'Pasta', 'Sitruuna', 'Tilli'] 
+    nameKey: 'sidebar.recipeNames.lohipasta',
+    itemKeys: ['lohi', 'kerma', 'pasta', 'sitruuna', 'tilli']
   },
 ];

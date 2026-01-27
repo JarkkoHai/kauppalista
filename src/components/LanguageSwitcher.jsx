@@ -6,10 +6,17 @@ const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'fi' ? 'en' : 'fi';
-    i18n.changeLanguage(newLang);
-    localStorage.setItem('language', newLang);
-  };
+  const currentLang = i18n.language;
+  const newLang = currentLang === 'fi' ? 'en' : 'fi';
+  
+  console.log('🔵 Current language:', currentLang);
+  console.log('🔵 Switching to:', newLang);
+  
+  i18n.changeLanguage(newLang);
+  localStorage.setItem('language', newLang);
+  
+  console.log('🟢 Language changed to:', i18n.language);
+};
 
   return (
     <button

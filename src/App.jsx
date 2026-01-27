@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // ← LISÄÄ TÄMÄ
 import { createList, joinList } from './utils/listService';
 import { generateRoomCode } from './utils/helpers';
 import { 
@@ -43,6 +44,8 @@ import ShareModal from './components/ShareModal';
 import Sidebar from './components/Sidebar';
 
 const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
+  const { t } = useTranslation(); // ← LISÄÄ TÄMÄ
+
   console.log('👤 Current user ID:', user?.uid);
   console.log('🏠 Room code:', roomCode);
   //console.log('🟣 ShoppingListApp rendered with:', { roomCode, isPro, userId: user?.uid });
@@ -206,7 +209,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
                 onClick={() => setShowShareModal(true)}
                 className="text-[10px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1.5 hover:text-emerald-700 transition-colors"
               >
-                <Share2 className="w-3 h-3" /> Jaa ryhmäkoodi
+                <Share2 className="w-3 h-3" /> {t('app.shareCode')}
               </button>
             </div>
           </div>
@@ -218,7 +221,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
                 title="Tyhjennä koko lista"
               >
                 <ArchiveX className="w-5 h-5" />
-                <span className="hidden lg:inline uppercase">Tyhjennä</span>
+                <span className="hidden lg:inline uppercase">{t('app.clear')}</span>
               </button>
             )}
             <button onClick={onLeave} className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all active:scale-90" title="Poistu ryhmästä">
@@ -237,7 +240,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
               type="text"
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
-              placeholder="Lisää uusi tuote..."
+              placeholder={t('app.addItem')}
               className="flex-1 px-4 outline-none font-bold text-slate-700 placeholder:text-slate-300"
             />
             <button 
@@ -254,7 +257,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 opacity-30">
               <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-xs font-black uppercase tracking-widest">Ladataan...</p>
+              <p className="text-xs font-black uppercase tracking-widest">{t('app.loading')}</p>
             </div>
           ) : (
             <>
@@ -277,7 +280,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
               {groupedActive['muut'] && groupedActive['muut'].length > 0 && (
                 <div className="space-y-3">
                   {Object.keys(groupedActive).length > 1 && (
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Muut ostokset</h3>
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{t('app.otherItems')}</h3>
                   )}
                   {groupedActive['muut'].map(item => renderItem(item))}
                 </div>
@@ -290,7 +293,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
                     onClick={() => setShowCompleted(!showCompleted)}
                     className="w-full flex items-center justify-between p-2 mb-4 text-slate-400 hover:text-slate-600 transition-all border-b border-slate-100"
                   >
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">KERÄTYT ({completedItems.length})</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('app.completed')} ({completedItems.length})</span>
                     {showCompleted ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                   
@@ -315,8 +318,8 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
               {items.length === 0 && (
                 <div className="text-center py-20 opacity-20">
                   <ShoppingCart className="w-20 h-20 mx-auto mb-4" />
-                  <p className="font-black text-xl text-slate-800 uppercase tracking-tighter">Lista on tyhjä</p>
-                  <p className="text-sm font-bold">Lisää jotain yläpuolelta!</p>
+                  <p className="font-black text-xl text-slate-800 uppercase tracking-tighter">{t('app.emptyTitle')}</p>
+                  <p className="text-sm font-bold">{t('app.emptySubtitle')}</p>
                 </div>
               )}
             </>
@@ -411,6 +414,7 @@ export default function App() {
 
 // Siirrä vanha App-logiikka MainApp-komponenttiin
 function MainApp() {
+  const { i18n } = useTranslation(); // ← LISÄÄ TÄMÄ
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('shopping_session_pro_v2');
@@ -467,12 +471,10 @@ function MainApp() {
 
   if (!session) {
   return <LoginScreen 
+    key={i18n.language} // ← LISÄÄ TÄMÄ
     onJoin={(code) => handleJoin(code, false)} 
     onProLogin={(u) => {
-      // Poista vanha sessio ensin
       localStorage.removeItem('shopping_session_pro_v2');
-      
-      // Luo uusi Pro-lista
       const newCode = generateRoomCode();
       handleJoin(newCode, true);
     }} 

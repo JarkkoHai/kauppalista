@@ -24,6 +24,8 @@ import { auth } from '../config/firebase';
 
 const LoginScreen = ({ onJoin, onProLogin }) => {
   const { t } = useTranslation();
+
+  
   
   const [roomCode, setRoomCode] = useState('');
   const [showEmailLogin, setShowEmailLogin] = useState(false);
