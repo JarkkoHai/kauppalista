@@ -23,9 +23,12 @@ import {
 import { auth } from '../config/firebase';
 
 const LoginScreen = ({ onJoin, onProLogin }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language; // ← Pakota riippuvuus
 
-  
+  console.log('🟣 LoginScreen rendered, language:', currentLang);
+  console.log('🟣 Title should be:', t('login.title'));
+  console.log('🟣 Subtitle should be:', t('login.subtitle'));
   
   const [roomCode, setRoomCode] = useState('');
   const [showEmailLogin, setShowEmailLogin] = useState(false);

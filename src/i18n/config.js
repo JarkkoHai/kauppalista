@@ -31,8 +31,6 @@ const resources = {
           cancelled: "Kirjautuminen peruutettu."
         }
       },
-      
-      // ShoppingListApp
       app: {
         addItem: "Lisää uusi tuote...",
         shareCode: "Jaa ryhmäkoodi",
@@ -44,8 +42,6 @@ const resources = {
         otherItems: "Muut ostokset",
         completed: "KERÄTYT"
       },
-      
-      // ShareModal
       share: {
         title: "Kutsu tiimiisi",
         subtitle: "Muut voivat liittyä skanaamalla:",
@@ -56,70 +52,58 @@ const resources = {
         whatsapp: "WhatsApp",
         close: "Sulje"
       },
-      
-      // Sidebar
       sidebar: {
-  title: "PRO-TYÖKALUT",
-  quickAdd: "Pikalisäys",
-  recipes: "Resepti-ideat",
-  addIngredients: "Lisää {{count}} ainesta",
-  anonymous: "Anonyymi",
-  premiumMember: "Premium Jäsen",
-  
-  categories: {
-    hevi: "HeVi",
-    dairy: "Maitotuotteet",
-    meat: "Liha & Proteiini"
-  },
-  
-  items: {
-    // HeVi
-    omena: "Omena",
-    banaani: "Banaani",
-    kurkku: "Kurkku",
-    tomaatti: "Tomaatti",
-    porkkana: "Porkkana",
-    sipuli: "Sipuli",
-    
-    // Maitotuotteet
-    maito: "Maito",
-    kaurajuoma: "Kaurajuoma",
-    juusto: "Juusto",
-    voi: "Voi",
-    jogurtti: "Jogurtti",
-    rahka: "Rahka",
-    
-    // Liha & Proteiini
-    jauheliha: "Jauheliha",
-    kanafilee: "Kanafilee",
-    lohi: "Lohi",
-    kananmuna: "Kananmuna",
-    nakki: "Nakki",
-    
-    // Reseptiainekset
-    tomaattimurska: "Tomaattimurska",
-    spagetti: "Spagetti",
-    valkosipuli: "Valkosipuli",
-    kana: "Kana",
-    keittojuurekset: "Keittojuurekset",
-    peruna: "Peruna",
-    kanaliemikuutio: "Kanaliemikuutio",
-    kerma: "Kerma",
-    pasta: "Pasta",
-    sitruuna: "Sitruuna",
-    tilli: "Tilli"
-  },
-  
-  recipeNames: {
-    bolognese: "Bolognese",
-    kanakeitto: "Kanakeitto",
-    lohipasta: "Lohipasta"
-  }
-}
+        title: "PRO-TYÖKALUT",
+        quickAdd: "Pikalisäys",
+        recipes: "Resepti-ideat",
+        addIngredients: "Lisää {{count}} ainesta",
+        anonymous: "Anonyymi",
+        premiumMember: "Premium Jäsen",
+        categories: {
+          hevi: "HeVi",
+          dairy: "Maitotuotteet",
+          meat: "Liha & Proteiini"
+        },
+        items: {
+          omena: "Omena",
+          banaani: "Banaani",
+          kurkku: "Kurkku",
+          tomaatti: "Tomaatti",
+          porkkana: "Porkkana",
+          sipuli: "Sipuli",
+          maito: "Maito",
+          kaurajuoma: "Kaurajuoma",
+          juusto: "Juusto",
+          voi: "Voi",
+          jogurtti: "Jogurtti",
+          rahka: "Rahka",
+          jauheliha: "Jauheliha",
+          kanafilee: "Kanafilee",
+          lohi: "Lohi",
+          kananmuna: "Kananmuna",
+          nakki: "Nakki",
+          tomaattimurska: "Tomaattimurska",
+          spagetti: "Spagetti",
+          valkosipuli: "Valkosipuli",
+          kana: "Kana",
+          keittojuurekset: "Keittojuurekset",
+          peruna: "Peruna",
+          kanaliemikuutio: "Kanaliemikuutio",
+          kerma: "Kerma",
+          pasta: "Pasta",
+          sitruuna: "Sitruuna",
+          tilli: "Tilli"
+        },
+        recipeNames: {
+          bolognese: "Bolognese",
+          kanakeitto: "Kanakeitto",
+          lohipasta: "Lohipasta"
+        }
+      }
+    }
   },
   en: {
     translation: {
-      // LoginScreen
       login: {
         title: "Shopping List Pro",
         subtitle: "Plan and share with your family.",
@@ -144,8 +128,6 @@ const resources = {
           cancelled: "Login cancelled."
         }
       },
-      
-      // ShoppingListApp
       app: {
         addItem: "Add new item...",
         shareCode: "Share group code",
@@ -157,8 +139,6 @@ const resources = {
         otherItems: "Other items",
         completed: "COMPLETED"
       },
-      
-      // ShareModal
       share: {
         title: "Invite to your team",
         subtitle: "Others can join by scanning:",
@@ -169,88 +149,83 @@ const resources = {
         whatsapp: "WhatsApp",
         close: "Close"
       },
-      
-      // Sidebar
       sidebar: {
-  title: "PRO TOOLS",
-  quickAdd: "Quick Add",
-  recipes: "Recipe Ideas",
-  addIngredients: "Add {{count}} ingredients",
-  anonymous: "Anonymous",
-  premiumMember: "Premium Member",
-  
-  categories: {
-    hevi: "Fruits & Veggies",
-    dairy: "Dairy Products",
-    meat: "Meat & Protein"
-  },
-  
-  items: {
-    // Fruits & Veggies
-    omena: "Apple",
-    banaani: "Banana",
-    kurkku: "Cucumber",
-    tomaatti: "Tomato",
-    porkkana: "Carrot",
-    sipuli: "Onion",
-    
-    // Dairy
-    maito: "Milk",
-    kaurajuoma: "Oat drink",
-    juusto: "Cheese",
-    voi: "Butter",
-    jogurtti: "Yogurt",
-    rahka: "Quark",
-    
-    // Meat & Protein
-    jauheliha: "Ground beef",
-    kanafilee: "Chicken breast",
-    lohi: "Salmon",
-    kananmuna: "Egg",
-    nakki: "Sausage",
-    
-    // Recipe ingredients
-    tomaattimurska: "Crushed tomatoes",
-    spagetti: "Spaghetti",
-    valkosipuli: "Garlic",
-    kana: "Chicken",
-    keittojuurekset: "Soup vegetables",
-    peruna: "Potato",
-    kanaliemikuutio: "Chicken stock cube",
-    kerma: "Cream",
-    pasta: "Pasta",
-    sitruuna: "Lemon",
-    tilli: "Dill"
-  },
-  
-  recipeNames: {
-    bolognese: "Bolognese",
-    kanakeitto: "Chicken soup",
-    lohipasta: "Salmon pasta"
-  }
-}
+        title: "PRO TOOLS",
+        quickAdd: "Quick Add",
+        recipes: "Recipe Ideas",
+        addIngredients: "Add {{count}} ingredients",
+        anonymous: "Anonymous",
+        premiumMember: "Premium Member",
+        categories: {
+          hevi: "Fruits & Veggies",
+          dairy: "Dairy Products",
+          meat: "Meat & Protein"
+        },
+        items: {
+          omena: "Apple",
+          banaani: "Banana",
+          kurkku: "Cucumber",
+          tomaatti: "Tomato",
+          porkkana: "Carrot",
+          sipuli: "Onion",
+          maito: "Milk",
+          kaurajuoma: "Oat drink",
+          juusto: "Cheese",
+          voi: "Butter",
+          jogurtti: "Yogurt",
+          rahka: "Quark",
+          jauheliha: "Ground beef",
+          kanafilee: "Chicken breast",
+          lohi: "Salmon",
+          kananmuna: "Egg",
+          nakki: "Sausage",
+          tomaattimurska: "Crushed tomatoes",
+          spagetti: "Spaghetti",
+          valkosipuli: "Garlic",
+          kana: "Chicken",
+          keittojuurekset: "Soup vegetables",
+          peruna: "Potato",
+          kanaliemikuutio: "Chicken stock cube",
+          kerma: "Cream",
+          pasta: "Pasta",
+          sitruuna: "Lemon",
+          tilli: "Dill"
+        },
+        recipeNames: {
+          bolognese: "Bolognese",
+          kanakeitto: "Chicken soup",
+          lohipasta: "Salmon pasta"
+        }
       }
     }
   }
 };
 
+let isInitialized = false;
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('language') || 'fi',
+    lng: localStorage.getItem('language') || 'fi', // ← Lue heti alussa
     fallbackLng: 'fi',
     interpolation: {
       escapeValue: false
     },
     react: {
-      useSuspense: false  // ← LISÄÄ TÄMÄ
+      useSuspense: false
     }
+  }).then(() => {
+    isInitialized = true;
   });
 
 // Debug
 i18n.on('languageChanged', (lng) => {
   console.log('🌍 Language changed to:', lng);
+  // Tallenna LocalStorageen vain jos muutos tulee käyttäjältä
+  if (isInitialized) {
+    localStorage.setItem('language', lng);
+  }
 });
 
 export default i18n;

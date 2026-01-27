@@ -414,12 +414,16 @@ export default function App() {
 
 // Siirrä vanha App-logiikka MainApp-komponenttiin
 function MainApp() {
-  const { i18n } = useTranslation(); // ← LISÄÄ TÄMÄ
+  const { i18n } = useTranslation();
+  
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('shopping_session_pro_v2');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // POISTETTU languageChanged listener
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -471,7 +475,7 @@ function MainApp() {
 
   if (!session) {
   return <LoginScreen 
-    key={i18n.language} // ← LISÄÄ TÄMÄ
+    key={i18n.language} // ← Suoraan i18n:stä
     onJoin={(code) => handleJoin(code, false)} 
     onProLogin={(u) => {
       localStorage.removeItem('shopping_session_pro_v2');
