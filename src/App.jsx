@@ -37,11 +37,13 @@ import {
   ChevronDown,
   ChevronUp,
   Tag,
-  } from 'lucide-react';
+  Crown, // ← LISÄÄ TÄMÄ
+} from 'lucide-react';
 import { CATEGORIES, RECIPES } from './data/constants';
 import LoginScreen from './components/LoginScreen';
 import ShareModal from './components/ShareModal';
 import Sidebar from './components/Sidebar';
+import PricingModal from './components/PricingModal'; // ← LISÄÄ TÄMÄ
 
 const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
   const { t } = useTranslation(); // ← LISÄÄ TÄMÄ
@@ -56,6 +58,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+   const [showPricingModal, setShowPricingModal] = useState(false); // ← LISÄÄ TÄMÄS
 
   useEffect(() => {
   //console.log('🔵 Setting up items listener for listId:', roomCode);
@@ -214,20 +217,32 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {items.length > 0 && (
-              <button 
-                onClick={clearList} 
-                className="p-2.5 text-slate-400 hover:text-red-600 transition-all flex items-center gap-2 font-bold text-xs"
-                title="Tyhjennä koko lista"
-              >
-                <ArchiveX className="w-5 h-5" />
-                <span className="hidden lg:inline uppercase">{t('app.clear')}</span>
-              </button>
-            )}
-            <button onClick={onLeave} className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all active:scale-90" title="Poistu ryhmästä">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+  {/* Näytä "Päivitä Pro+" nappi vain jos EI ole Pro */}
+  {!isPro && (
+  <button
+    onClick={() => setShowPricingModal(true)}
+    className="relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-xl font-black text-xs shadow-lg shadow-yellow-200 hover:shadow-xl hover:shadow-yellow-300 active:scale-95 transition-all animate-pulse"
+  >
+    <Crown className="w-4 h-4" />
+    <span className="hidden sm:inline">PRO+</span>
+  </button>
+)}
+  
+  {items.length > 0 && (
+    <button 
+      onClick={clearList} 
+      className="p-2.5 text-slate-400 hover:text-red-600 transition-all flex items-center gap-2 font-bold text-xs"
+      title="Tyhjennä koko lista"
+    >
+      <ArchiveX className="w-5 h-5" />
+      <span className="hidden lg:inline uppercase">{t('app.clear')}</span>
+    </button>
+  )}
+  
+  <button onClick={onLeave} className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all active:scale-90" title="Poistu ryhmästä">
+    <LogOut className="w-5 h-5" />
+  </button>
+</div>
         </header>
 
         {/* Syöttökenttä */}
@@ -327,17 +342,21 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
         </main>
       </div>
 
-      {/* Jakomoduali - WhatsApp ja Kopiointi */}
-{showShareModal && (
-  <ShareModal
-    roomCode={roomCode}
-    copied={copied}
-    onClose={() => setShowShareModal(false)}
-    onCopyCode={handleCopyCode}
-    onWhatsAppShare={handleWhatsAppShare}
-  />
-)}
+       {/* Jakomoduali - WhatsApp ja Kopiointi */}
+      {showShareModal && (
+        <ShareModal
+          roomCode={roomCode}
+          copied={copied}
+          onClose={() => setShowShareModal(false)}
+          onCopyCode={handleCopyCode}
+          onWhatsAppShare={handleWhatsAppShare}
+        />
+      )}
 
+      {/* Pricing Modal */}
+      {showPricingModal && (
+        <PricingModal onClose={() => setShowPricingModal(false)} />
+      )}
       
     </div>
   );
