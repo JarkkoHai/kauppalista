@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "kauppalista-haikarainen",
+    "default": "kauppalista-pro",
     "production": "kauppalista-pro"
   },
   "targets": {},
