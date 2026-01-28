@@ -224,7 +224,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
     className="relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-xl font-black text-xs shadow-lg shadow-yellow-200 hover:shadow-xl hover:shadow-yellow-300 active:scale-95 transition-all animate-pulse"
   >
     <Crown className="w-4 h-4" />
-    <span className="hidden sm:inline">PRO+</span>
+<span className="hidden sm:inline">{t('app.upgradeButton')}</span>
   </button>
 )}
   

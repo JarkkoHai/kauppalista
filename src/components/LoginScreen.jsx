@@ -18,7 +18,8 @@ import {
   Mail, 
   Lock, 
   Eye, 
-  EyeOff 
+  EyeOff, 
+  Check // ← LISÄÄ TÄMÄ
 } from 'lucide-react';
 import { auth } from '../config/firebase';
 
@@ -32,6 +33,7 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
   
   const [roomCode, setRoomCode] = useState('');
   const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [showPricing, setShowPricing] = useState(false); // ← LISÄÄ TÄMÄ
   const [username, setUsername] = useState(localStorage.getItem('saved_username') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -130,8 +132,54 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
         <h1 className="text-3xl font-black mb-2 tracking-tight uppercase">{t('login.title')}</h1>
         <p className="text-slate-500 mb-8 font-medium italic">{t('login.subtitle')}</p>
         
-        {!showEmailLogin ? (
-          <div className="space-y-4">
+       {showPricing ? (
+  // PRICING NÄKYMÄ
+  <div className="space-y-4 text-left">
+    <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <Crown className="w-8 h-8 text-slate-900" />
+    </div>
+    
+    <h2 className="text-2xl font-black text-center mb-2">{t('pricing.title')}</h2>
+    <p className="text-slate-500 text-center mb-6 text-sm">{t('pricing.subtitle')}</p>
+
+    <div className="bg-slate-50 rounded-2xl p-6 mb-6 text-center">
+      <div className="text-4xl font-black mb-1">{t('pricing.price')}</div>
+      <div className="text-slate-500 text-sm font-bold">{t('pricing.period')}</div>
+    </div>
+
+    <div className="space-y-3 mb-6">
+      {[
+        t('pricing.features.recipes'),
+        t('pricing.features.categories'),
+        t('pricing.features.persistent'),
+        t('pricing.features.quickAdd'),
+        t('pricing.features.noAds')
+      ].map((feature, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="bg-emerald-100 rounded-full p-1">
+            <Check className="w-4 h-4 text-emerald-600" />
+          </div>
+          <span className="font-bold text-slate-700 text-sm">{feature}</span>
+        </div>
+      ))}
+    </div>
+
+    <button
+      onClick={() => setShowEmailLogin(true)}
+      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-xl active:scale-95 transition-all"
+    >
+      {t('pricing.button')}
+    </button>
+
+    <button 
+      onClick={() => setShowPricing(false)} 
+      className="w-full text-center text-xs font-bold text-slate-400 py-2"
+    >
+      {t('login.backButton')}
+    </button>
+  </div>
+) : !showEmailLogin ? (
+  <div className="space-y-4">
             <div className="space-y-3">
               <input
                 type="text"
@@ -160,9 +208,9 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
 
             <div className="pt-4 border-t border-slate-100 mt-4">
               <button 
-                onClick={() => setShowEmailLogin(true)}
-                className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 text-white shadow-lg active:scale-[0.98] transition-all"
-              >
+  onClick={() => setShowPricing(true)} // ← MUUTA TÄMÄ
+  className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-700 text-white shadow-lg active:scale-[0.98] transition-all"
+>
                 <div className="flex items-center gap-3">
                   <div className="bg-yellow-400 p-1.5 rounded-lg">
                     <Crown className="w-4 h-4 text-slate-900 fill-slate-900" />

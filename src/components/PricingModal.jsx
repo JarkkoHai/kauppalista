@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Crown, Check } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
@@ -6,6 +7,7 @@ import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
 const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 const PricingModal = ({ onClose }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -26,6 +28,14 @@ const PricingModal = ({ onClose }) => {
     setLoading(false);
   };
 
+  const features = [
+    t('pricing.features.recipes'),
+    t('pricing.features.categories'),
+    t('pricing.features.persistent'),
+    t('pricing.features.quickAdd'),
+    t('pricing.features.noAds')
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl max-w-md w-full p-8 relative">
@@ -41,22 +51,16 @@ const PricingModal = ({ onClose }) => {
             <Crown className="w-8 h-8 text-slate-900" />
           </div>
           
-          <h2 className="text-2xl font-black mb-2">Kauppalista Pro+</h2>
-          <p className="text-slate-500 mb-6">Paranna ostoskokemustasi premium-ominaisuuksilla</p>
+          <h2 className="text-2xl font-black mb-2">{t('pricing.title')}</h2>
+          <p className="text-slate-500 mb-6">{t('pricing.subtitle')}</p>
 
           <div className="bg-slate-50 rounded-2xl p-6 mb-6">
-            <div className="text-4xl font-black mb-1">9,99€</div>
-            <div className="text-slate-500 text-sm font-bold">per kuukausi</div>
+            <div className="text-4xl font-black mb-1">{t('pricing.price')}</div>
+            <div className="text-slate-500 text-sm font-bold">{t('pricing.period')}</div>
           </div>
 
           <div className="space-y-3 mb-8 text-left">
-            {[
-              'Resepti-ideat ja ainesten lisäys',
-              'Kategorioitu tuotelista',
-              'Pysyvä lista joka säilyy',
-              'Nopea pikalisäys',
-              'Ei mainoksia'
-            ].map((feature, i) => (
+            {features.map((feature, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="bg-emerald-100 rounded-full p-1">
                   <Check className="w-4 h-4 text-emerald-600" />
@@ -71,11 +75,11 @@ const PricingModal = ({ onClose }) => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-xl active:scale-95 transition-all disabled:opacity-50"
           >
-            {loading ? 'Ladataan...' : 'Aloita Pro+ tilaus'}
+            {loading ? t('app.loading') : t('pricing.button')}
           </button>
 
           <p className="text-xs text-slate-400 mt-4">
-            Voit peruuttaa milloin tahansa. Turvallinen maksu Stripen kautta.
+            {t('pricing.disclaimer')}
           </p>
         </div>
       </div>

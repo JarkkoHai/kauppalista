@@ -40,7 +40,8 @@ const resources = {
         emptyTitle: "Lista on tyhjä",
         emptySubtitle: "Lisää jotain yläpuolelta!",
         otherItems: "Muut ostokset",
-        completed: "KERÄTYT"
+        completed: "KERÄTYT",
+        upgradeButton: "PRO+" // ← LISÄÄ TÄMÄ
       },
       share: {
         title: "Kutsu tiimiisi",
@@ -52,6 +53,22 @@ const resources = {
         whatsapp: "WhatsApp",
         close: "Sulje"
       },
+      // LISÄÄ TÄMÄ:
+pricing: {
+  title: "Kauppalista Pro+",
+  subtitle: "Paranna ostoskokemustasi premium-ominaisuuksilla",
+  price: "9,99€",
+  period: "per kuukausi",
+  features: {
+    recipes: "Resepti-ideat ja ainesten lisäys",
+    categories: "Kategorioitu tuotelista",
+    persistent: "Pysyvä lista joka säilyy",
+    quickAdd: "Nopea pikalisäys",
+    noAds: "Ei mainoksia"
+  },
+  button: "Aloita Pro+ tilaus",
+  disclaimer: "Voit peruuttaa milloin tahansa. Turvallinen maksu Stripen kautta."
+},
       sidebar: {
         title: "PRO-TYÖKALUT",
         quickAdd: "Pikalisäys",
@@ -137,7 +154,8 @@ const resources = {
         emptyTitle: "List is empty",
         emptySubtitle: "Add something above!",
         otherItems: "Other items",
-        completed: "COMPLETED"
+        completed: "COMPLETED",
+        upgradeButton: "UPGRADE" // ← LISÄÄ TÄMÄ
       },
       share: {
         title: "Invite to your team",
@@ -149,6 +167,22 @@ const resources = {
         whatsapp: "WhatsApp",
         close: "Close"
       },
+      // LISÄÄ TÄMÄ:
+pricing: {
+  title: "Shopping List Pro+",
+  subtitle: "Enhance your shopping experience with premium features",
+  price: "€9.99",
+  period: "per month",
+  features: {
+    recipes: "Recipe ideas and ingredient adding",
+    categories: "Categorized product list",
+    persistent: "Persistent list that saves",
+    quickAdd: "Quick add feature",
+    noAds: "No advertisements"
+  },
+  button: "Start Pro+ subscription",
+  disclaimer: "Cancel anytime. Secure payment via Stripe."
+},
       sidebar: {
         title: "PRO TOOLS",
         quickAdd: "Quick Add",
