@@ -14,7 +14,7 @@ const resources = {
         codeHelp: "Jätä tyhjäksi luodaksesi uuden listan tai syötä koodi liittyäksesi olemassa olevaan.",
         startButton: "ALOITA KÄYTTÖ",
         proButton: "Pro+ Kirjautuminen",
-        email: "Sähköposti",
+        username: "Käyttäjätunnus", // ← MUUTA tämä (oli: email)
         password: "Salasana",
         rememberMe: "Muista minut tällä laitteella",
         loginButton: "KIRJAUDU SISÄÄN",
@@ -111,7 +111,7 @@ const resources = {
         codeHelp: "Leave empty to create a new list or enter a code to join an existing one.",
         startButton: "GET STARTED",
         proButton: "Pro+ Login",
-        email: "Email",
+        username: "Username", // ← MUUTA tämä (oli: email)
         password: "Password",
         rememberMe: "Remember me on this device",
         loginButton: "SIGN IN",

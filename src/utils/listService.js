@@ -2,16 +2,23 @@ import {
   collection, 
   doc, 
   setDoc, 
-  getDoc, 
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
   serverTimestamp,
   updateDoc,
   arrayUnion
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
+const COLLECTION_PATH = 'lists';
+
 // Luo uusi lista
 export const createList = async (code, userId, isPro = false) => {
-  const listRef = doc(db, 'lists', code);
+  const listRef = doc(db, COLLECTION_PATH, code);
   
   try {
     await setDoc(listRef, {
@@ -31,7 +38,7 @@ export const createList = async (code, userId, isPro = false) => {
 
 // Liity olemassa olevaan listaan
 export const joinList = async (code, userId) => {
-  const listRef = doc(db, 'lists', code);
+  const listRef = doc(db, COLLECTION_PATH, code);
   
   try {
     // Tarkista onko lista olemassa
@@ -56,9 +63,36 @@ export const joinList = async (code, userId) => {
   }
 };
 
+// Hae käyttäjän viimeisin lista
+export const getUserLatestList = async (userId) => {
+  try {
+    const listsRef = collection(db, COLLECTION_PATH);
+    const q = query(
+      listsRef,
+      where('members', 'array-contains', userId),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+    
+    const snapshot = await getDocs(q);
+    
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
+      console.log('📂 Found existing list:', doc.data().code);
+      return { success: true, code: doc.data().code };
+    }
+    
+    console.log('📂 No existing list found');
+    return { success: false };
+  } catch (error) {
+    console.error('Error fetching user list:', error);
+    return { success: false, error };
+  }
+};
+
 // Tarkista onko käyttäjä listan jäsen
 export const isMember = async (code, userId) => {
-  const listRef = doc(db, 'lists', code);
+  const listRef = doc(db, COLLECTION_PATH, code);
   
   try {
     const listSnap = await getDoc(listRef);

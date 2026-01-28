@@ -32,7 +32,7 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
   
   const [roomCode, setRoomCode] = useState('');
   const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [email, setEmail] = useState(localStorage.getItem('saved_email') || '');
+  const [username, setUsername] = useState(localStorage.getItem('saved_username') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(localStorage.getItem('remember_me') === 'true');
@@ -45,30 +45,40 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       
+      // Muunna käyttäjätunnus emailiksi automaattisesti
+      const emailToUse = username.includes('@') 
+        ? username 
+        : `${username.toLowerCase().trim()}@kauppalista.local`;
+      
+      console.log('🔵 Attempting login with:', emailToUse);
+      
       // Yritä ensin kirjautua sisään
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, emailToUse, password);
         
         if (rememberMe) {
-          localStorage.setItem('saved_email', email);
+          localStorage.setItem('saved_username', username);
           localStorage.setItem('remember_me', 'true');
         } else {
-          localStorage.removeItem('saved_email');
+          localStorage.removeItem('saved_username');
           localStorage.removeItem('remember_me');
         }
         
+        console.log('✅ Login successful');
         onProLogin(userCredential.user);
       } catch (signInError) {
         // Jos käyttäjää ei löydy, luo uusi
         if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
           try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            console.log('🔵 User not found, creating new account');
+            const userCredential = await createUserWithEmailAndPassword(auth, emailToUse, password);
             
             if (rememberMe) {
-              localStorage.setItem('saved_email', email);
+              localStorage.setItem('saved_username', username);
               localStorage.setItem('remember_me', 'true');
             }
             
+            console.log('✅ Account created');
             onProLogin(userCredential.user);
           } catch (createError) {
             // Luo käyttäjä epäonnistui
@@ -171,16 +181,16 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
               </div>
             )}
             <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('login.email')}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('login.username')}</label>
               <div className="relative mt-1">
                 <Mail className="absolute left-4 top-3.5 w-5 h-5 text-slate-300" />
                 <input 
-                  type="email" 
+                  type="text" 
                   required 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)}
+                  value={username} 
+                  onChange={e => setUsername(e.target.value)}
                   className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-50 focus:border-emerald-500 outline-none transition-all font-bold"
-                  placeholder="matti@esimerkki.fi"
+                  placeholder="esim. mikko"
                 />
               </div>
             </div>

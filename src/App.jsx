@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'; // ← LISÄÄ TÄMÄ
-import { createList, joinList } from './utils/listService';
+import { createList, joinList, getUserLatestList } from './utils/listService';
 import { generateRoomCode } from './utils/helpers';
 import { 
   signInAnonymously, 
@@ -426,17 +426,25 @@ function MainApp() {
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (!u) {
-        if (localStorage.getItem('shopping_session_pro_v2')) {
-          signInAnonymously(auth).catch(e => console.error(e));
-        }
-      } else {
-        setUser(u);
+  const unsubscribe = onAuthStateChanged(auth, (u) => {
+    if (!u) {
+      // Ei käyttäjää - kirjaudu anonyymisti vain jos on vanha sessio
+      if (localStorage.getItem('shopping_session_pro_v2')) {
+        signInAnonymously(auth).catch(e => console.error(e));
       }
-    });
-    return () => unsubscribe();
-  }, []);
+    } else {
+      setUser(u);
+      
+      // Jos käyttäjä on kirjautunut emaililla mutta ei ole sessiota, luo se
+      if (!session && !u.isAnonymous) {
+        console.log('🔵 Email user logged in, checking for existing list');
+        // Tässä voidaan myöhemmin hakea käyttäjän listat
+        // Nyt vain asetetaan käyttäjä
+      }
+    }
+  });
+  return () => unsubscribe();
+}, [session]);
 
  const handleJoin = async (code, isPro = false) => {
   let currentUser = auth.currentUser;
@@ -477,11 +485,25 @@ function MainApp() {
   return <LoginScreen 
     key={i18n.language} // ← Suoraan i18n:stä
     onJoin={(code) => handleJoin(code, false)} 
-    onProLogin={(u) => {
-      localStorage.removeItem('shopping_session_pro_v2');
-      const newCode = generateRoomCode();
-      handleJoin(newCode, true);
-    }} 
+    onProLogin={async (u) => {
+  console.log('🔵 onProLogin called with user:', u.uid);
+  localStorage.removeItem('shopping_session_pro_v2');
+  
+  // Yritä hakea käyttäjän vanha lista
+  console.log('🔵 Fetching user latest list...');
+  const existingList = await getUserLatestList(u.uid);
+  console.log('🔵 getUserLatestList result:', existingList);
+  
+  if (existingList.success) {
+    console.log('📂 Rejoining existing list:', existingList.code);
+    handleJoin(existingList.code, true);
+  } else {
+    console.log('📂 Creating new list');
+    const newCode = generateRoomCode();
+    console.log('📂 New code generated:', newCode);
+    handleJoin(newCode, true);
+  }
+}}
   />;
 }
 
