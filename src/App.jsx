@@ -417,60 +417,77 @@ function MainApp() {
   const { i18n } = useTranslation();
   
   const [user, setUser] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // ← VAIN TÄMÄ
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('shopping_session_pro_v2');
     return saved ? JSON.parse(saved) : null;
   });
 
-  // POISTETTU languageChanged listener
-
-
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (u) => {
-    if (!u) {
-      // Ei käyttäjää - kirjaudu anonyymisti vain jos on vanha sessio
-      if (localStorage.getItem('shopping_session_pro_v2')) {
-        signInAnonymously(auth).catch(e => console.error(e));
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        // Ei kirjautunut käyttäjä
+        if (localStorage.getItem('shopping_session_pro_v2')) {
+          signInAnonymously(auth).catch(e => console.error(e));
+        }
+      } else {
+        // Käyttäjä on kirjautunut
+        setUser(u);
+        
+        // Jos käyttäjä on kirjautunut emaililla mutta ei ole sessiota
+        // JA ei ole kirjautumassa ulos
+        if (!session && !u.isAnonymous && !isLoggingOut) {
+          console.log('🔵 Pro user logged in, fetching their list...');
+          
+          // Hae käyttäjän lista
+          const existingList = await getUserLatestList(u.uid);
+          
+          if (existingList.success) {
+            console.log('📂 Restoring session with list:', existingList.code);
+            const restoredSession = { 
+              code: existingList.code, 
+              isPro: true 
+            };
+            setSession(restoredSession);
+            localStorage.setItem('shopping_session_pro_v2', JSON.stringify(restoredSession));
+          } else {
+            console.log('📂 No list found, user needs to create one');
+          }
+        }
       }
-    } else {
-      setUser(u);
-      
-      // Jos käyttäjä on kirjautunut emaililla mutta ei ole sessiota, luo se
-      if (!session && !u.isAnonymous) {
-        console.log('🔵 Email user logged in, checking for existing list');
-        // Tässä voidaan myöhemmin hakea käyttäjän listat
-        // Nyt vain asetetaan käyttäjä
-      }
-    }
-  });
-  return () => unsubscribe();
-}, [session]);
+    });
+    return () => unsubscribe();
+  }, [session, isLoggingOut]);
 
- const handleJoin = async (code, isPro = false) => {
-  let currentUser = auth.currentUser;
-  
-  if (!currentUser) {
-    const userCredential = await signInAnonymously(auth);
-    currentUser = userCredential.user;
-  }
-  
-  const result = await joinList(code, currentUser.uid);  // ✅ Kutsutaan joinList
-  
-  if (result.success) {
-    const newSession = { code: result.code, isPro };
-    setSession(newSession);
-    localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
-  } else {
-    console.error('Failed to join/create list:', result.error);
-    alert('Virhe listan luomisessa/liittymisessä');
-  }
-};
+  const handleJoin = async (code, isPro = false) => {
+    let currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      const userCredential = await signInAnonymously(auth);
+      currentUser = userCredential.user;
+    }
+    
+    const result = await joinList(code, currentUser.uid);
+    
+    if (result.success) {
+      const newSession = { code: result.code, isPro };
+      setSession(newSession);
+      localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
+    } else {
+      console.error('Failed to join/create list:', result.error);
+      alert('Virhe listan luomisessa/liittymisessä');
+    }
+  };
+
+  // ← POISTA TÄMÄ: const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     setSession(null);
     localStorage.removeItem('shopping_session_pro_v2');
     await signOut(auth);
     setUser(null);
+    setIsLoggingOut(false);
   };
 
   if (session && !user) {
@@ -482,30 +499,30 @@ function MainApp() {
   }
 
   if (!session) {
-  return <LoginScreen 
-    key={i18n.language} // ← Suoraan i18n:stä
-    onJoin={(code) => handleJoin(code, false)} 
-    onProLogin={async (u) => {
-  console.log('🔵 onProLogin called with user:', u.uid);
-  localStorage.removeItem('shopping_session_pro_v2');
-  
-  // Yritä hakea käyttäjän vanha lista
-  console.log('🔵 Fetching user latest list...');
-  const existingList = await getUserLatestList(u.uid);
-  console.log('🔵 getUserLatestList result:', existingList);
-  
-  if (existingList.success) {
-    console.log('📂 Rejoining existing list:', existingList.code);
-    handleJoin(existingList.code, true);
-  } else {
-    console.log('📂 Creating new list');
-    const newCode = generateRoomCode();
-    console.log('📂 New code generated:', newCode);
-    handleJoin(newCode, true);
+    return <LoginScreen 
+      key={i18n.language}
+      onJoin={(code) => handleJoin(code, false)} 
+      onProLogin={async (u) => {
+        console.log('🔵 onProLogin called with user:', u.uid);
+        localStorage.removeItem('shopping_session_pro_v2');
+        
+        // Yritä hakea käyttäjän vanha lista
+        console.log('🔵 Fetching user latest list...');
+        const existingList = await getUserLatestList(u.uid);
+        console.log('🔵 getUserLatestList result:', existingList);
+        
+        if (existingList.success) {
+          console.log('📂 Rejoining existing list:', existingList.code);
+          handleJoin(existingList.code, true);
+        } else {
+          console.log('📂 Creating new list');
+          const newCode = generateRoomCode();
+          console.log('📂 New code generated:', newCode);
+          handleJoin(newCode, true);
+        }
+      }}
+    />;
   }
-}}
-  />;
-}
 
   return (
     <ShoppingListApp 
