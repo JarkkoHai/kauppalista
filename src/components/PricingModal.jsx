@@ -11,22 +11,45 @@ const PricingModal = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
-    setLoading(true);
+  setLoading(true);
+  
+  try {
+    console.log('🔵 Calling Firebase Function...');
+    console.log('Price ID:', PRICES.PRO_MONTHLY);
     
-    try {
-      const stripe = await stripePromise;
-      
-      // Tämä tulee myöhemmin Firebase Functionista
-      // Nyt vain placeholder
-      alert('Stripe checkout tulossa pian! Price ID: ' + PRICES.PRO_MONTHLY);
-      
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Virhe maksun käsittelyssä');
+    // Kutsu Firebase Functionia
+    const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        priceId: PRICES.PRO_MONTHLY,
+        userId: 'test-user-id',
+      }),
+    });
+
+    console.log('🔵 Response status:', response.status);
+    
+    const data = await response.json();
+    console.log('🔵 Response data:', data);
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Unknown error');
     }
+
+    // UUSI TAPA: Ohjaa suoraan URL:iin
+    const checkoutUrl = data.url;
+    console.log('🔵 Redirecting to:', checkoutUrl);
     
+    window.location.href = checkoutUrl;
+    
+  } catch (error) {
+    console.error('🔴 Error:', error);
+    alert('Virhe: ' + error.message);
     setLoading(false);
-  };
+  }
+};
 
   const features = [
     t('pricing.features.recipes'),
