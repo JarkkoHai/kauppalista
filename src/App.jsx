@@ -15,9 +15,14 @@ import {
 } from 'firebase/auth';
 import { 
   collection, 
-  addDoc, 
-  onSnapshot, 
   doc, 
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit,
   updateDoc, 
   deleteDoc, 
   serverTimestamp,
@@ -45,12 +50,17 @@ import ShareModal from './components/ShareModal';
 import Sidebar from './components/Sidebar';
 import PricingModal from './components/PricingModal'; // ← LISÄÄ TÄMÄ
 
-const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
-  const { t } = useTranslation(); // ← LISÄÄ TÄMÄ
-
-  console.log('👤 Current user ID:', user?.uid);
-  console.log('🏠 Room code:', roomCode);
-  //console.log('🟣 ShoppingListApp rendered with:', { roomCode, isPro, userId: user?.uid });
+const ShoppingListApp = ({ 
+  roomCode, 
+  isPro, 
+  user, 
+  onLeave, 
+  setSession, 
+  showPricingModal, 
+  setShowPricingModal 
+}) => {
+  const { t } = useTranslation();
+  
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -58,7 +68,7 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
-   const [showPricingModal, setShowPricingModal] = useState(false); // ← LISÄÄ TÄMÄS
+  
 
   useEffect(() => {
   //console.log('🔵 Setting up items listener for listId:', roomCode);
@@ -355,12 +365,22 @@ const ShoppingListApp = ({ roomCode, isPro, user, onLeave }) => {
 
       {/* Pricing Modal */}
       {showPricingModal && (
-        <PricingModal onClose={() => setShowPricingModal(false)} />
-      )}
-      
-    </div>
-  );
+  <PricingModal 
+    user={user}
+    onClose={() => setShowPricingModal(false)}
+    onLoginRequired={() => {
+      // Sulje modal
+      setShowPricingModal(false);
+      // Kutsu onLeave joka hoitaa kaiken
+      onLeave();
+    }}
+  />
+)}
+    
+  </div>
+);
 };
+
 const JoinPage = () => {
   const { code } = useParams();
   const navigate = useNavigate();
@@ -434,13 +454,19 @@ export default function App() {
 // Siirrä vanha App-logiikka MainApp-komponenttiin
 function MainApp() {
   const { i18n } = useTranslation();
+  const navigate = useNavigate(); // ← LISÄÄ TÄMÄ
   
   const [user, setUser] = useState(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false); // ← VAIN TÄMÄ
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false); // ← LISÄÄ TÄMÄ
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('shopping_session_pro_v2');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // DEBUG
+  console.log('🟣 MainApp render - session:', session);
+  console.log('🟣 MainApp render - user:', user?.uid);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -500,14 +526,23 @@ function MainApp() {
 
   // ← POISTA TÄMÄ: const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    setSession(null);
-    localStorage.removeItem('shopping_session_pro_v2');
+const handleLogout = async () => {
+  console.log('🔴 handleLogout called');
+  setIsLoggingOut(true);
+  
+  // Nollaa kaikki
+  setSession(null);
+  setUser(null);
+  setShowPricingModal(false);
+  localStorage.removeItem('shopping_session_pro_v2');
+  
+  // Kirjaa ulos
+  if (auth.currentUser) {
     await signOut(auth);
-    setUser(null);
-    setIsLoggingOut(false);
-  };
+  }
+  
+  setIsLoggingOut(false);
+};
 
   if (session && !user) {
     return (
@@ -521,34 +556,58 @@ function MainApp() {
     return <LoginScreen 
       key={i18n.language}
       onJoin={(code) => handleJoin(code, false)} 
-      onProLogin={async (u) => {
-        console.log('🔵 onProLogin called with user:', u.uid);
-        localStorage.removeItem('shopping_session_pro_v2');
-        
-        // Yritä hakea käyttäjän vanha lista
-        console.log('🔵 Fetching user latest list...');
-        const existingList = await getUserLatestList(u.uid);
-        console.log('🔵 getUserLatestList result:', existingList);
-        
-        if (existingList.success) {
-          console.log('📂 Rejoining existing list:', existingList.code);
-          handleJoin(existingList.code, true);
-        } else {
-          console.log('📂 Creating new list');
-          const newCode = generateRoomCode();
-          console.log('📂 New code generated:', newCode);
-          handleJoin(newCode, true);
-        }
-      }}
+      onProLogin={async (user) => {
+  console.log('🔵 Pro+ login with user:', user.uid);
+  setUser(user);
+  
+  // Tarkista Firestoresta onko käyttäjä jo Pro+
+  const userDocRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userDocRef);
+  
+  if (userDoc.exists() && userDoc.data().isPro === true) {
+    console.log('✅ User is already Pro+, loading list...');
+    
+    // Hae käyttäjän viimeisin lista
+    const listsQuery = query(
+      collection(db, 'rooms'),
+      where('ownerId', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+    
+    const listsSnapshot = await getDocs(listsQuery);
+    
+    if (!listsSnapshot.empty) {
+      const listDoc = listsSnapshot.docs[0];
+      const roomCode = listDoc.id;
+      console.log('📂 Found existing list:', roomCode);
+      handleJoin(roomCode, true);
+    } else {
+      // Ei listaa, luo uusi
+      console.log('📝 No existing list, creating new...');
+      const newCode = generateRoomCode();
+      handleJoin(newCode, true);
+    }
+  } else {
+    // Ei ole Pro+ → luo uusi lista ja näytä pricing modal
+    console.log('💳 User not Pro+ yet, creating list and showing pricing...');
+    const newCode = generateRoomCode();
+    handleJoin(newCode, true); // Luo lista ensin
+  }
+}}
+
     />;
   }
 
-  return (
-    <ShoppingListApp 
-      roomCode={session.code} 
-      isPro={session.isPro} 
-      user={user} 
-      onLeave={handleLogout} 
-    />
-  );
+return (
+  <ShoppingListApp 
+    roomCode={session.code} 
+    isPro={session.isPro} 
+    user={user} 
+    onLeave={handleLogout}
+    setSession={setSession}
+    showPricingModal={showPricingModal}
+    setShowPricingModal={setShowPricingModal}
+  />
+);
 }

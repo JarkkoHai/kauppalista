@@ -165,11 +165,14 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
     </div>
 
     <button
-      onClick={() => setShowEmailLogin(true)}
-      className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-xl active:scale-95 transition-all"
-    >
-      {t('pricing.button')}
-    </button>
+  onClick={() => {
+    setShowPricing(false); // ← Sulje pricing ensin
+    setShowEmailLogin(true); // ← Avaa kirjautuminen
+  }}
+  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-xl active:scale-95 transition-all"
+>
+  {t('pricing.button')}
+</button>
 
     <button 
       onClick={() => setShowPricing(false)} 
@@ -304,9 +307,15 @@ const LoginScreen = ({ onJoin, onProLogin }) => {
               {t('login.googleButton')}
             </button>
 
-            <button type="button" onClick={() => setShowEmailLogin(false)} className="w-full text-center text-xs font-bold text-slate-400 py-2">
-              {t('login.backButton')}
-            </button>
+            <button 
+  onClick={() => {
+    setShowEmailLogin(false);
+    setShowPricing(false); // ← LISÄÄ TÄMÄ (palaa suoraan etusivulle)
+  }} 
+  className="w-full text-center text-xs font-bold text-slate-400 py-2"
+>
+  {t('login.backButton')}
+</button>
           </form>
         )}
       </div>

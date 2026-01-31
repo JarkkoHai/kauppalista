@@ -59,3 +59,39 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Käsittele event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.client_reference_id;
+
+    console.log('💳 Payment successful for user:', userId);
+
+    // Päivitä käyttäjän Pro+ status
+    await admin.firestore().collection('users').doc(userId).set({
+      isPro: true,
+      stripeCustomerId: session.customer,
+      subscriptionId: session.subscription,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    console.log('✅ User upgraded to Pro+:', userId);
+  }
+
+  res.status(200).send('OK');
+});
