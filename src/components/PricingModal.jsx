@@ -1,61 +1,71 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Crown, Check } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+//import { loadStripe } from '@stripe/stripe-js';
 import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
 
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+//const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 const PricingModal = ({ user, onClose, onLoginRequired }) => { // ← Lisää onLoginRequired
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
-    setLoading(true);
-    
-    try {
-      // Jos ei ole kirjautunut, pyydä kirjautumista
-      if (!user) {
-        console.log('🔵 User not logged in, requesting login...');
-        onLoginRequired(); // ← Kutsu callbackia
-        return;
-      }
-      
-      console.log('🔵 Calling Firebase Function...');
-      console.log('Price ID:', PRICES.PRO_MONTHLY);
-      console.log('User ID:', user.uid);
-      
-      const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: PRICES.PRO_MONTHLY,
-          userId: user.uid,
-        }),
-      });
-
-      console.log('🔵 Response status:', response.status);
-      
-      const data = await response.json();
-      console.log('🔵 Response data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Unknown error');
-      }
-
-      const checkoutUrl = data.url;
-      console.log('🔵 Redirecting to:', checkoutUrl);
-      
-      window.location.href = checkoutUrl;
-      
-    } catch (error) {
-      console.error('🔴 Error:', error);
-      alert('Virhe: ' + error.message);
+  console.log('🔵 handleCheckout called');
+  console.log('🔵 user:', user);
+  console.log('🔵 user?.isAnonymous:', user?.isAnonymous);
+  
+  setLoading(true);
+  
+  try {
+    // Jos ei ole kirjautunut TAI on anonyymi → ohjaa kirjautumiseen
+    if (!user || user.isAnonymous) {
+      console.log('🔴 Need to login first, redirecting...');
       setLoading(false);
+      
+      // Kutsu onLoginRequired ILMAN alertia
+      if (onLoginRequired) {
+        onLoginRequired();
+      }
+      return;
     }
-  };
+    
+    // Tässä vaiheessa user on kirjautunut Pro+ tilillä
+    console.log('🔵 Calling Firebase Function...');
+    console.log('Price ID:', PRICES.PRO_MONTHLY);
+    console.log('User ID:', user.uid);
+    
+    const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        priceId: PRICES.PRO_MONTHLY,
+        userId: user.uid,
+      }),
+    });
+
+    console.log('🔵 Response status:', response.status);
+    
+    const data = await response.json();
+    console.log('🔵 Response data:', data);
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Unknown error');
+    }
+
+    const checkoutUrl = data.url;
+    console.log('🔵 Redirecting to Stripe:', checkoutUrl);
+    
+    window.location.href = checkoutUrl;
+    
+  } catch (error) {
+    console.error('🔴 Error:', error);
+    alert('Virhe: ' + error.message);
+    setLoading(false);
+  }
+};
 
   const features = [
     t('pricing.features.recipes'),

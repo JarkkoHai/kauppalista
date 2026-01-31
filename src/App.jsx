@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'; // ← LISÄÄ TÄMÄ
-import { createList, joinList, getUserLatestList } from './utils/listService';
+import { joinList, getUserLatestList } from './utils/listService';
 import { generateRoomCode } from './utils/helpers';
 import { 
   signInAnonymously, 
   onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
+  //createUserWithEmailAndPassword,
+  //signInWithEmailAndPassword,
   signOut,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
+  //setPersistence,
+  //browserLocalPersistence,
+  //browserSessionPersistence
 } from 'firebase/auth';
 import { 
   collection, 
@@ -23,6 +23,7 @@ import {
   where,
   orderBy,
   limit,
+  addDoc,
   updateDoc, 
   deleteDoc, 
   serverTimestamp,
@@ -55,7 +56,7 @@ const ShoppingListApp = ({
   isPro, 
   user, 
   onLeave, 
-  setSession, 
+  //setSession, 
   showPricingModal, 
   setShowPricingModal 
 }) => {
@@ -70,7 +71,7 @@ const ShoppingListApp = ({
   const [copied, setCopied] = useState(false);
   
 
-  useEffect(() => {
+useEffect(() => {
   //console.log('🔵 Setting up items listener for listId:', roomCode);
   
   const q = collection(db, 'list_items');
@@ -83,15 +84,24 @@ const ShoppingListApp = ({
     //console.log('🔵 Items loaded:', filtered.length);
     setItems(filtered);
     setLoading(false);
-  }, (err) => {
-    //console.error('🔴 Error loading items:', err);
-  });
+  }, () => {  // ← Alaviiva kertoo että ei käytetä
+  //console.error('🔴 Error loading items:', _err);
+});
 
   return () => {
     //console.log('🔵 Cleaning up listener');
     unsubscribe();
   };
 }, [roomCode]); // ← TÄRKEÄÄ: vain roomCode dependency
+
+// ← LISÄÄ TÄHÄN UUSI useEffect:
+useEffect(() => {
+  // Jos käyttäjä on kirjautunut mutta ei ole Pro, näytä pricing
+  if (user && !isPro && !user.isAnonymous) {
+    console.log('🔵 User logged in but not Pro, showing pricing');
+    setShowPricingModal(true);
+  }
+}, [user, isPro]);
 
   const addItem = async (text, recipeName = null) => {
   if (!text.trim()) return;
@@ -364,15 +374,14 @@ const ShoppingListApp = ({
       )}
 
       {/* Pricing Modal */}
-      {showPricingModal && (
+{showPricingModal && (
   <PricingModal 
     user={user}
     onClose={() => setShowPricingModal(false)}
     onLoginRequired={() => {
-      // Sulje modal
+      console.log('🔴 onLoginRequired called - logging out');
       setShowPricingModal(false);
-      // Kutsu onLeave joka hoitaa kaiken
-      onLeave();
+      onLeave(); // ← TÄMÄ PITÄÄ OLLA
     }}
   />
 )}
@@ -454,7 +463,7 @@ export default function App() {
 // Siirrä vanha App-logiikka MainApp-komponenttiin
 function MainApp() {
   const { i18n } = useTranslation();
-  const navigate = useNavigate(); // ← LISÄÄ TÄMÄ
+  //const navigate = useNavigate(); // ← LISÄÄ TÄMÄ
   
   const [user, setUser] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -567,7 +576,6 @@ const handleLogout = async () => {
   if (userDoc.exists() && userDoc.data().isPro === true) {
     console.log('✅ User is already Pro+, loading list...');
     
-    // Hae käyttäjän viimeisin lista
     const listsQuery = query(
       collection(db, 'rooms'),
       where('ownerId', '==', user.uid),
@@ -583,16 +591,19 @@ const handleLogout = async () => {
       console.log('📂 Found existing list:', roomCode);
       handleJoin(roomCode, true);
     } else {
-      // Ei listaa, luo uusi
       console.log('📝 No existing list, creating new...');
       const newCode = generateRoomCode();
       handleJoin(newCode, true);
     }
   } else {
-    // Ei ole Pro+ → luo uusi lista ja näytä pricing modal
-    console.log('💳 User not Pro+ yet, creating list and showing pricing...');
+    // Ei ole Pro+ → luo lista JA merkitse että pricing pitää näyttää
+    console.log('💳 User not Pro+ yet, creating list...');
     const newCode = generateRoomCode();
-    handleJoin(newCode, true); // Luo lista ensin
+    
+    await handleJoin(newCode, true);
+    
+    // ÄLÄ NÄYTÄ MODALIA TÄSSÄ
+    // Modal näytetään ShoppingListApp:ssa useEffect:llä
   }
 }}
 
@@ -605,7 +616,7 @@ return (
     isPro={session.isPro} 
     user={user} 
     onLeave={handleLogout}
-    setSession={setSession}
+    //setSession={setSession}
     showPricingModal={showPricingModal}
     setShowPricingModal={setShowPricingModal}
   />
