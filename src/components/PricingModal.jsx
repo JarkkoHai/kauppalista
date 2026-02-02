@@ -6,32 +6,27 @@ import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
 
 //const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
-const PricingModal = ({ user, onClose, onLoginRequired }) => { // ← Lisää onLoginRequired
+const PricingModal = ({ user, onClose }) => { // ← POISTA onLoginRequired
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
-  const handleCheckout = async () => {
+const handleCheckout = async () => {
   console.log('🔵 handleCheckout called');
   console.log('🔵 user:', user);
   console.log('🔵 user?.isAnonymous:', user?.isAnonymous);
   
+  // Jos ei ole kirjautunut TAI on anonyymi
+  if (!user || user.isAnonymous) {
+    alert('Kirjaudu ensin Pro+ tilille aloittaaksesi tilauksen.');
+    console.log('🔴 User must login first');
+    return; // ← PYSÄYTÄ TÄHÄN, älä tee mitään muuta
+  }
+  
+  // Tästä eteenpäin: User ON kirjautunut Pro+ tilillä
   setLoading(true);
   
   try {
-    // Jos ei ole kirjautunut TAI on anonyymi → ohjaa kirjautumiseen
-    if (!user || user.isAnonymous) {
-      console.log('🔴 Need to login first, redirecting...');
-      setLoading(false);
-      
-      // Kutsu onLoginRequired ILMAN alertia
-      if (onLoginRequired) {
-        onLoginRequired();
-      }
-      return;
-    }
-    
-    // Tässä vaiheessa user on kirjautunut Pro+ tilillä
-    console.log('🔵 Calling Firebase Function...');
+    console.log('🔵 User is logged in, calling Stripe...');
     console.log('Price ID:', PRICES.PRO_MONTHLY);
     console.log('User ID:', user.uid);
     
@@ -55,14 +50,12 @@ const PricingModal = ({ user, onClose, onLoginRequired }) => { // ← Lisää on
       throw new Error(data.error || 'Unknown error');
     }
 
-    const checkoutUrl = data.url;
-    console.log('🔵 Redirecting to Stripe:', checkoutUrl);
-    
-    window.location.href = checkoutUrl;
+    console.log('🔵 Redirecting to Stripe:', data.url);
+    window.location.href = data.url;
     
   } catch (error) {
     console.error('🔴 Error:', error);
-    alert('Virhe: ' + error.message);
+    alert('Virhe maksun aloittamisessa: ' + error.message);
     setLoading(false);
   }
 };

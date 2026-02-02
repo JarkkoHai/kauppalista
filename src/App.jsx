@@ -95,13 +95,13 @@ useEffect(() => {
 }, [roomCode]); // ← TÄRKEÄÄ: vain roomCode dependency
 
 // ← LISÄÄ TÄHÄN UUSI useEffect:
-useEffect(() => {
+//useEffect(() => {
   // Jos käyttäjä on kirjautunut mutta ei ole Pro, näytä pricing
-  if (user && !isPro && !user.isAnonymous) {
-    console.log('🔵 User logged in but not Pro, showing pricing');
-    setShowPricingModal(true);
-  }
-}, [user, isPro]);
+  //if (user && !isPro && !user.isAnonymous) {
+    //console.log('🔵 User logged in but not Pro, showing pricing');
+    //setShowPricingModal(true);
+  //}
+//}, [user, isPro, setShowPricingModal]); // ← LISÄÄ TÄMÄ
 
   const addItem = async (text, recipeName = null) => {
   if (!text.trim()) return;
@@ -378,11 +378,6 @@ useEffect(() => {
   <PricingModal 
     user={user}
     onClose={() => setShowPricingModal(false)}
-    onLoginRequired={() => {
-      console.log('🔴 onLoginRequired called - logging out');
-      setShowPricingModal(false);
-      onLeave(); // ← TÄMÄ PITÄÄ OLLA
-    }}
   />
 )}
     
@@ -573,7 +568,10 @@ const handleLogout = async () => {
   const userDocRef = doc(db, 'users', user.uid);
   const userDoc = await getDoc(userDocRef);
   
-  if (userDoc.exists() && userDoc.data().isPro === true) {
+  const isProUser = userDoc.exists() && userDoc.data().isPro === true;
+  console.log('🔵 User Pro+ status:', isProUser);
+  
+  if (isProUser) {
     console.log('✅ User is already Pro+, loading list...');
     
     const listsQuery = query(
@@ -589,21 +587,22 @@ const handleLogout = async () => {
       const listDoc = listsSnapshot.docs[0];
       const roomCode = listDoc.id;
       console.log('📂 Found existing list:', roomCode);
-      handleJoin(roomCode, true);
+      handleJoin(roomCode, true); // ← isPro = true
     } else {
       console.log('📝 No existing list, creating new...');
       const newCode = generateRoomCode();
-      handleJoin(newCode, true);
+      handleJoin(newCode, true); // ← isPro = true
     }
   } else {
-    // Ei ole Pro+ → luo lista JA merkitse että pricing pitää näyttää
-    console.log('💳 User not Pro+ yet, creating list...');
+    // Ei ole Pro+ → luo lista JA näytä pricing
+    console.log('💳 User not Pro+ yet, creating list and showing pricing...');
     const newCode = generateRoomCode();
     
-    await handleJoin(newCode, true);
+    await handleJoin(newCode, true); // ← LAITATAAN isPro = true ettei loop
     
-    // ÄLÄ NÄYTÄ MODALIA TÄSSÄ
-    // Modal näytetään ShoppingListApp:ssa useEffect:llä
+    // Nyt näytä pricing
+    console.log('🔵 Showing pricing modal...');
+    setShowPricingModal(true);
   }
 }}
 
