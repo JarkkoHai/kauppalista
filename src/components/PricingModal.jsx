@@ -6,50 +6,56 @@ import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
 
 const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
-const PricingModal = ({ onClose }) => {
+const PricingModal = ({ onClose, user }) => { // ← Lisää user prop
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
-  setLoading(true);
-  
-  try {
-    console.log('🔵 Calling Firebase Function...');
-    console.log('Price ID:', PRICES.PRO_MONTHLY);
+    setLoading(true);
     
-    // Kutsu Firebase Functionia
-    const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        priceId: PRICES.PRO_MONTHLY,
-        userId: 'test-user-id',
-      }),
-    });
+    try {
+      // Tarkista että käyttäjä on kirjautunut
+      if (!user || user.isAnonymous) {
+        alert('Kirjaudu ensin Pro+ tilille aloittaaksesi tilauksen.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('🔵 Calling Firebase Function...');
+      console.log('Price ID:', PRICES.PRO_MONTHLY);
+      console.log('User ID:', user.uid); // ← Oikea user ID
+      
+      const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: PRICES.PRO_MONTHLY,
+          userId: user.uid, // ← KÄYTÄ OIKEAA USER ID:tä!
+        }),
+      });
 
-    console.log('🔵 Response status:', response.status);
-    
-    const data = await response.json();
-    console.log('🔵 Response data:', data);
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Unknown error');
+      console.log('🔵 Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('🔵 Response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Unknown error');
+      }
+
+      const checkoutUrl = data.url;
+      console.log('🔵 Redirecting to:', checkoutUrl);
+      
+      window.location.href = checkoutUrl;
+      
+    } catch (error) {
+      console.error('🔴 Error:', error);
+      alert('Virhe: ' + error.message);
+      setLoading(false);
     }
-
-    // UUSI TAPA: Ohjaa suoraan URL:iin
-    const checkoutUrl = data.url;
-    console.log('🔵 Redirecting to:', checkoutUrl);
-    
-    window.location.href = checkoutUrl;
-    
-  } catch (error) {
-    console.error('🔴 Error:', error);
-    alert('Virhe: ' + error.message);
-    setLoading(false);
-  }
-};
+  };
 
   const features = [
     t('pricing.features.recipes'),

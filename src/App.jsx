@@ -56,7 +56,7 @@ const ShoppingListApp = ({
   isPro, 
   user, 
   onLeave, 
-  //setSession, 
+  session, 
   showPricingModal, 
   setShowPricingModal 
 }) => {
@@ -69,7 +69,7 @@ const ShoppingListApp = ({
   const [showCompleted, setShowCompleted] = useState(true);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  
+  const [pricingShown, setPricingShown] = useState(false); // ← LISÄÄ TÄMÄ FLAG
 
 useEffect(() => {
   //console.log('🔵 Setting up items listener for listId:', roomCode);
@@ -95,13 +95,14 @@ useEffect(() => {
 }, [roomCode]); // ← TÄRKEÄÄ: vain roomCode dependency
 
 // ← LISÄÄ TÄHÄN UUSI useEffect:
-//useEffect(() => {
-  // Jos käyttäjä on kirjautunut mutta ei ole Pro, näytä pricing
-  //if (user && !isPro && !user.isAnonymous) {
-    //console.log('🔵 User logged in but not Pro, showing pricing');
-    //setShowPricingModal(true);
-  //}
-//}, [user, isPro, setShowPricingModal]); // ← LISÄÄ TÄMÄ
+useEffect(() => {
+  // Näytä pricing vain kerran
+  if (user && !isPro && !user.isAnonymous && session && session.code && !pricingShown) {
+    console.log('🔵 User logged in but not Pro, showing pricing');
+    setShowPricingModal(true);
+    setPricingShown(true); // ← Merkitse että on näytetty
+  }
+}, [user, isPro, session, pricingShown, setShowPricingModal]);
 
   const addItem = async (text, recipeName = null) => {
   if (!text.trim()) return;
@@ -377,7 +378,10 @@ useEffect(() => {
 {showPricingModal && (
   <PricingModal 
     user={user}
-    onClose={() => setShowPricingModal(false)}
+    onClose={() => {
+      setShowPricingModal(false);
+      // ÄLÄ nollaa pricingShown flagia - halutaan näyttää vain kerran
+    }}
   />
 )}
     
@@ -560,12 +564,12 @@ const handleLogout = async () => {
     return <LoginScreen 
       key={i18n.language}
       onJoin={(code) => handleJoin(code, false)} 
-      onProLogin={async (user) => {
-  console.log('🔵 Pro+ login with user:', user.uid);
-  setUser(user);
+      onProLogin={async (loggedInUser) => {
+  console.log('🔵 Pro+ login with user:', loggedInUser.uid);
+  setUser(loggedInUser);
   
   // Tarkista Firestoresta onko käyttäjä jo Pro+
-  const userDocRef = doc(db, 'users', user.uid);
+  const userDocRef = doc(db, 'users', loggedInUser.uid);
   const userDoc = await getDoc(userDocRef);
   
   const isProUser = userDoc.exists() && userDoc.data().isPro === true;
@@ -576,7 +580,7 @@ const handleLogout = async () => {
     
     const listsQuery = query(
       collection(db, 'rooms'),
-      where('ownerId', '==', user.uid),
+      where('ownerId', '==', loggedInUser.uid),
       orderBy('createdAt', 'desc'),
       limit(1)
     );
@@ -587,25 +591,27 @@ const handleLogout = async () => {
       const listDoc = listsSnapshot.docs[0];
       const roomCode = listDoc.id;
       console.log('📂 Found existing list:', roomCode);
-      handleJoin(roomCode, true); // ← isPro = true
+      handleJoin(roomCode, true);
     } else {
       console.log('📝 No existing list, creating new...');
       const newCode = generateRoomCode();
-      handleJoin(newCode, true); // ← isPro = true
+      handleJoin(newCode, true);
     }
   } else {
-    // Ei ole Pro+ → luo lista JA näytä pricing
-    console.log('💳 User not Pro+ yet, creating list and showing pricing...');
+    // Ei ole Pro+ → luo lista ILMAN pricing modalia
+    console.log('💳 User not Pro+ yet, creating list...');
     const newCode = generateRoomCode();
     
-    await handleJoin(newCode, true); // ← LAITATAAN isPro = true ettei loop
+    const result = await joinList(newCode, loggedInUser.uid);
     
-    // Nyt näytä pricing
-    console.log('🔵 Showing pricing modal...');
-    setShowPricingModal(true);
+    if (result.success) {
+      const newSession = { code: result.code, isPro: false }; // ← isPro = FALSE!
+      setSession(newSession);
+      localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
+      // ÄLÄ näytä pricing modalia tässä - se tapahtuu ShoppingListApp:ssa
+    }
   }
 }}
-
     />;
   }
 
