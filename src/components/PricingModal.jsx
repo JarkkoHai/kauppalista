@@ -1,35 +1,23 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Crown, Check } from 'lucide-react';
-//import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
 
-//const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
-const PricingModal = ({ user, onClose }) => { // ← POISTA onLoginRequired
+const PricingModal = ({ onClose }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
-const handleCheckout = async () => {
-  console.log('🔵 handleCheckout called');
-  console.log('🔵 user:', user);
-  console.log('🔵 user?.isAnonymous:', user?.isAnonymous);
-  
-  // Jos ei ole kirjautunut TAI on anonyymi
-  if (!user || user.isAnonymous) {
-    alert('Kirjaudu ensin Pro+ tilille aloittaaksesi tilauksen.');
-    console.log('🔴 User must login first');
-    return; // ← PYSÄYTÄ TÄHÄN, älä tee mitään muuta
-  }
-  
-  // Tästä eteenpäin: User ON kirjautunut Pro+ tilillä
+  const handleCheckout = async () => {
   setLoading(true);
   
   try {
-    console.log('🔵 User is logged in, calling Stripe...');
+    console.log('🔵 Calling Firebase Function...');
     console.log('Price ID:', PRICES.PRO_MONTHLY);
-    console.log('User ID:', user.uid);
     
+    // Kutsu Firebase Functionia
     const response = await fetch('https://us-central1-kauppalista-pro.cloudfunctions.net/createCheckoutSession', {
       method: 'POST',
       headers: {
@@ -37,7 +25,7 @@ const handleCheckout = async () => {
       },
       body: JSON.stringify({
         priceId: PRICES.PRO_MONTHLY,
-        userId: user.uid,
+        userId: 'test-user-id',
       }),
     });
 
@@ -50,12 +38,15 @@ const handleCheckout = async () => {
       throw new Error(data.error || 'Unknown error');
     }
 
-    console.log('🔵 Redirecting to Stripe:', data.url);
-    window.location.href = data.url;
+    // UUSI TAPA: Ohjaa suoraan URL:iin
+    const checkoutUrl = data.url;
+    console.log('🔵 Redirecting to:', checkoutUrl);
+    
+    window.location.href = checkoutUrl;
     
   } catch (error) {
     console.error('🔴 Error:', error);
-    alert('Virhe maksun aloittamisessa: ' + error.message);
+    alert('Virhe: ' + error.message);
     setLoading(false);
   }
 };
