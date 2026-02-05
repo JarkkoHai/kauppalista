@@ -1,10 +1,11 @@
 /* eslint-env node */
+require('dotenv').config();
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-// Älä alusta Stripea heti, vaan vasta kun sitä tarvitaan
 let stripe;
 
 exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {

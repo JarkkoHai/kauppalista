@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Crown, Check } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
 import { STRIPE_PUBLIC_KEY, PRICES } from '../config/stripe';
-
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 const PricingModal = ({ onClose, user }) => { // ← Lisää user prop
   const { t } = useTranslation();

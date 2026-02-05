@@ -605,7 +605,7 @@ const handleLogout = async () => {
     const result = await joinList(newCode, loggedInUser.uid);
     
     if (result.success) {
-      const newSession = { code: result.code, isPro: false }; // ← isPro = FALSE!
+      const newSession = { code: result.code, isPro: true }; // ← isPro = TRUE
       setSession(newSession);
       localStorage.setItem('shopping_session_pro_v2', JSON.stringify(newSession));
       // ÄLÄ näytä pricing modalia tässä - se tapahtuu ShoppingListApp:ssa
